@@ -1,1 +1,1 @@
-# projec-tracker
+# project-tracker
