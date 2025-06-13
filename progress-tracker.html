@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Student Progress Tracker</title>
+<!-- Google Fonts: Inter & Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button, input, textarea {
+    font-family: inherit;
+    font-size: 1rem;
+  }
+  /* Header styling */
+  header {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: white;
+  }
+  main {
+    flex: 1;
+    max-width: 1024px;
+    width: 100%;
+    margin: 32px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  @media (min-width: 780px) {
+    main {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+  /* Task input form */
+  .task-form {
+    background: #1e1e2f;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(39,39,56,0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .task-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #bbb;
+  }
+  .task-form input[type="text"],
+  .task-form input[type="date"],
+  .task-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: none;
+    background: #2c2c3e;
+    color: white;
+    resize: vertical;
+    transition: background-color 0.3s ease;
+  }
+  .task-form input[type="text"]:focus,
+  .task-form input[type="date"]:focus,
+  .task-form textarea:focus {
+    background: #3a3a52;
+    outline: none;
+  }
+  .task-form textarea {
+    min-height: 80px;
+    font-family: inherit;
+  }
+  .task-form button {
+    align-self: flex-start;
+    background: #2575fc;
+    border: none;
+    padding: 12px 32px;
+    color: white;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 117, 252, 0.6);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .task-form button:hover,
+  .task-form button:focus {
+    background: #1854c1;
+    outline: none;
+    transform: translateY(-2px);
+  }
+
+  /* Task list container */
+  .task-list {
+    background: #1e1e2f;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(39,39,56,0.8);
+  }
+  .task-list h2 {
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: #ccc;
+  }
+  .task-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .task-list li {
+    display: flex;
+    align-items: center;
+    background: #272738;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 16px 20px;
+    gap: 16px;
+    position: relative;
+    transition: background-color 0.3s;
+  }
+  .task-list li.completed {
+    background: #0b6623;
+  }
+  .task-list li.completed .task-name,
+  .task-list li.completed .task-desc,
+  .task-list li.completed .task-due-date {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .task-checkbox {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: #444466;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+  }
+  .task-checkbox:checked {
+    background: #2575fc;
+  }
+  .task-checkbox:checked::after {
+    content: 'check';
+    font-family: 'Material Icons';
+    position: absolute;
+    color: white;
+    top: 1px;
+    left: 2px;
+    font-size: 20px;
+  }
+  .task-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #e0e0e0;
+    word-break: break-word;
+  }
+  .task-desc {
+    flex: 1.5;
+    color: #bbb;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+  .task-due-date {
+    font-size: 0.9rem;
+    color: #ea672e;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .task-actions {
+    display: flex;
+    gap: 12px;
+  }
+  .task-actions button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #bbb;
+    font-size: 24px;
+    padding: 4px;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .task-actions button:hover,
+  .task-actions button:focus {
+    color: #2575fc;
+    outline: none;
+  }
+  /* Progress bar container */
+  .progress-container {
+    background: #1e1e2f;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(39,39,56,0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .progress-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #ccc;
+  }
+  .progress-bar-bg {
+    background: #444466;
+    border-radius: 12px;
+    height: 20px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .progress-bar-fg {
+    height: 100%;
+    background: #2575fc;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #e0e0e0;
+    text-align: right;
+  }
+  /* Milestone section */
+  .milestone-container {
+    background: #1e1e2f;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(39,39,56,0.8);
+  }
+  .milestone-container h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    color: #ccc;
+  }
+  .milestone-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 350px;
+    overflow-y: auto;
+  }
+  .milestone-list li {
+    background: #272738;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .milestone-list li.upcoming {
+    border-left: 4px solid #2575fc;
+  }
+  .milestone-list li.completed {
+    border-left: 4px solid #0b6623;
+    opacity: 0.75;
+    text-decoration: line-through;
+  }
+  /* Scrollbar styling for lists */
+  ul::-webkit-scrollbar {
+    width: 8px;
+  }
+  ul::-webkit-scrollbar-thumb {
+    background: #444466;
+    border-radius: 20px;
+  }
+  ul::-webkit-scrollbar-track {
+    background: #1e1e2f;
+  }
+  /* Responsive footer */
+  footer {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    text-align: center;
+    padding: 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    user-select: none;
+  }
+  /* Focus outline for accessibility */
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #2575fc;
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Student Progress Tracker</h1>
+</header>
+
+<main aria-label="Main content area">
+  <section class="task-form" aria-labelledby="task-form-heading">
+    <h2 id="task-form-heading" class="sr-only">Add New Task</h2>
+    <form id="addTaskForm" novalidate>
+      <label for="taskName">Task Name</label>
+      <input type="text" id="taskName" name="taskName" placeholder="Enter task name" required autocomplete="off" />
+      
+      <label for="taskDesc">Description</label>
+      <textarea id="taskDesc" name="taskDesc" placeholder="Enter task description" required></textarea>
+      
+      <label for="taskDueDate">Due Date</label>
+      <input type="date" id="taskDueDate" name="taskDueDate" required />
+      
+      <button type="submit" aria-label="Add task">Add Task</button>
+    </form>
+  </section>
+
+  <section aria-label="Task management and progress overview">
+    <div class="task-list" aria-live="polite" aria-relevant="additions removals" aria-atomic="true">
+      <h2>Task List</h2>
+      <ul id="taskList" tabindex="0" aria-describedby="taskListDesc">
+        <li id="taskListDesc" class="sr-only">List of tasks. Use keyboard to navigate and manage tasks.</li>
+      </ul>
+    </div>
+
+    <div class="progress-container" aria-label="Progress overview">
+      <p class="progress-title">Progress</p>
+      <div class="progress-bar-bg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Task completion progress">
+        <div id="progressBar" class="progress-bar-fg"></div>
+      </div>
+      <p id="progressPercent" class="progress-text">0% completed</p>
+    </div>
+
+    <div class="milestone-container" aria-live="polite" aria-atomic="true">
+      <h2>Milestones</h2>
+      <ul id="milestoneList" class="milestone-list" tabindex="0" aria-describedby="milestoneListDesc">
+        <li id="milestoneListDesc" class="sr-only">Upcoming and completed milestones based on task due dates.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  &copy; 2024 Student Progress Tracker
+</footer>
+
+<script>
+  // Util: Format date to locale string
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString(undefined, options);
+  }
+  // Save/load JSON safely
+  function saveTasks(tasks) {
+    localStorage.setItem('studentTasks', JSON.stringify(tasks));
+  }
+  function loadTasks() {
+    try {
+      const data = localStorage.getItem('studentTasks');
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  }
+  // Global app state
+  let tasks = loadTasks();
+  // Elements
+  const taskListEl = document.getElementById('taskList');
+  const milestoneListEl = document.getElementById('milestoneList');
+  const progressBarEl = document.getElementById('progressBar');
+  const progressPercentEl = document.getElementById('progressPercent');
+  const addTaskForm = document.getElementById('addTaskForm');
+  // Render functions
+  function renderTasks() {
+    taskListEl.innerHTML = '';
+    if (tasks.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.textContent = 'No tasks added yet. Use the form to add new tasks.';
+      emptyMsg.style.color = '#777';
+      taskListEl.appendChild(emptyMsg);
+      updateProgress();
+      updateMilestones();
+      return;
+    }
+    tasks.forEach((task, index) => {
+      const li = document.createElement('li');
+      li.className = task.completed ? 'completed' : '';
+      li.setAttribute('data-index', index);
+      li.setAttribute('tabindex', '0');
+      // Checkbox for completed
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'task-checkbox';
+      checkbox.checked = task.completed;
+      checkbox.setAttribute('aria-label', Mark task "${task.taskName}" as completed);
+      checkbox.addEventListener('change', () => toggleCompleted(index));
+      // Task name
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = task.taskName;
+      nameSpan.className = 'task-name';
+      nameSpan.title = task.taskName;
+      // Description
+      const descSpan = document.createElement('span');
+      descSpan.textContent = task.description;
+      descSpan.className = 'task-desc';
+      descSpan.title = task.description;
+      // Due date
+      const dueSpan = document.createElement('span');
+      dueSpan.textContent = task.dueDate ? formatDate(task.dueDate) : 'No due date';
+      dueSpan.className = 'task-due-date';
+      dueSpan.title = task.dueDate ? Due: ${formatDate(task.dueDate)} : 'No due date';
+      // Actions: Edit, Delete
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'task-actions';
+
+      // Edit button
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'material-icons';
+      editBtn.title = Edit task "${task.taskName}";
+      editBtn.textContent = 'edit';
+      editBtn.setAttribute('aria-label', Edit task ${task.taskName});
+      editBtn.addEventListener('click', () => startEditTask(index));
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'material-icons';
+      deleteBtn.title = Delete task "${task.taskName}";
+      deleteBtn.textContent = 'delete';
+      deleteBtn.setAttribute('aria-label', Delete task ${task.taskName});
+      deleteBtn.addEventListener('click', () => deleteTask(index));
+
+      actionsDiv.appendChild(editBtn);
+      actionsDiv.appendChild(deleteBtn);
+
+      // Assemble list item
+      li.appendChild(checkbox);
+      li.appendChild(nameSpan);
+      li.appendChild(descSpan);
+      li.appendChild(dueSpan);
+      li.appendChild(actionsDiv);
+
+      taskListEl.appendChild(li);
+    });
+    updateProgress();
+    updateMilestones();
+  }
+  function updateProgress() {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    const percent = total === 0 ? 0 : (completed / total) * 100;
+    progressBarEl.style.width = percent + '%';
+    progressBarEl.parentElement.setAttribute('aria-valuenow', Math.round(percent));
+    progressPercentEl.textContent = ${Math.round(percent)}% completed;
+  }
+  function updateMilestones() {
+    milestoneListEl.innerHTML = '';
+    if (tasks.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.textContent = 'No milestones to display yet.';
+      emptyMsg.style.color = '#777';
+      milestoneListEl.appendChild(emptyMsg);
+      return;
+    }
+    // Sort tasks by due date ascending, filter tasks with due dates
+    const today = new Date();
+    const upcomingTasks = tasks
+      .filter(t => t.dueDate)
+      .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+    
+    // Display up to 7 milestones: completed and upcoming
+    let count = 0;
+    for (const task of upcomingTasks) {
+      if (count >= 7) break;
+      const li = document.createElement('li');
+      const dueDateFormatted = formatDate(task.dueDate);
+      if(task.completed) {
+        li.className = 'completed';
+        li.textContent = ${task.taskName} - Completed (Due ${dueDateFormatted});
+      } else {
+        const dueDateObj = new Date(task.dueDate);
+        if(dueDateObj >= today) {
+          li.className = 'upcoming';
+          li.textContent = ${task.taskName} - Due ${dueDateFormatted};
+        } else {
+          // Past due but not completed - highlight as upcoming with different coloring
+          li.style.borderLeft = '4px solid #ea672e';
+          li.textContent = ${task.taskName} - Overdue (Due ${dueDateFormatted});
+        }
+      }
+      milestoneListEl.appendChild(li);
+      count++;
+    }
+    if(count === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'No milestones with due dates set.';
+      li.style.color = '#777';
+      milestoneListEl.appendChild(li);
+    }
+  }
+  // Action handlers
+  function addTask(task) {
+    tasks.push(task);
+    saveTasks(tasks);
+    renderTasks();
+  }
+  function toggleCompleted(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks(tasks);
+    renderTasks();
+  }
+  function deleteTask(index) {
+    if (confirm(Are you sure you want to delete task: "${tasks[index].taskName}"?)) {
+      tasks.splice(index, 1);
+      saveTasks(tasks);
+      renderTasks();
+    }
+  }
+  // For editing: temporarily populate form with the task data and toggle editing mode
+  let editingIndex = null;
+  function startEditTask(index) {
+    editingIndex = index;
+    const task = tasks[index];
+    document.getElementById('taskName').value = task.taskName;
+    document.getElementById('taskDesc').value = task.description;
+    document.getElementById('taskDueDate').value = task.dueDate || '';
+    // Change button text
+    const submitBtn = addTaskForm.querySelector('button[type="submit"]');
+    submitBtn.textContent = 'Update Task';
+    submitBtn.setAttribute('aria-label', 'Update existing task');
+    // Focus first input
+    document.getElementById('taskName').focus();
+  }
+  function updateTask(updatedTask) {
+    if(editingIndex === null) return;
+    tasks[editingIndex] = updatedTask;
+    saveTasks(tasks);
+    renderTasks();
+    editingIndex = null;
+    // Reset form state
+    addTaskForm.reset();
+    const submitBtn = addTaskForm.querySelector('button[type="submit"]');
+    submitBtn.textContent = 'Add Task';
+    submitBtn.setAttribute('aria-label', 'Add new task');
+  }
+  // Form submission
+  addTaskForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const taskName = document.getElementById('taskName').value.trim();
+    const description = document.getElementById('taskDesc').value.trim();
+    const dueDate = document.getElementById('taskDueDate').value;
+
+    if(!taskName || !description || !dueDate) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const taskObj = {
+      taskName,
+      description,
+      dueDate,
+      completed: editingIndex !== null ? tasks[editingIndex].completed : false,
+    };
+
+    if(editingIndex === null) {
+      addTask(taskObj);
+      addTaskForm.reset();
+    } else {
+      updateTask(taskObj);
+    }
+  });
+  // Initial render
+  renderTasks();
+</script>
+
+</body>
+</html>
+
+Run this for me
